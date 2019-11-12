@@ -1,7 +1,5 @@
 import { TodoListState } from '../interfaces/todo';
 import * as TodoActions from './todo.actions';
-import { data } from '../data/todos';
-
 
 const initialState: TodoListState = {
 	addingTodo: false,
@@ -13,7 +11,10 @@ const initialState: TodoListState = {
 export function todoReducer (state: TodoListState = initialState, action: TodoActions.TodoActionTypes): TodoListState {
 	switch (action.type) {
 		case TodoActions.GET_TODOS: {
-			return { ...state, todos: data, loading: false };
+			return { ...state, loading: true };
+		}
+		case TodoActions.GET_TODOS_SUCCESS: {
+			return { ...state, todos: action.todos, loading: false }
 		}
 		case TodoActions.ADDING_TODO: {
 			return { ...state, addingTodo: action.isAdding }

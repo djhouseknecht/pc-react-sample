@@ -4,14 +4,14 @@ import { AddTodo } from './add-todo';
 import { ITodo, TodoFilterType } from '../interfaces/todo';
 import { TodoFilter } from './todo-filter';
 import { connect } from 'react-redux';
-import { getTodos, updateTodo, filterTodos, addingTodo } from '../store/todo.actions';
+import { getTodos, updateTodo, filterTodos, addingTodo, getTodosAsync } from '../store/todo.actions';
 import { AppStoreState } from '../store/store';
 import { Action } from 'redux';
 
 class _TodoList extends React.Component<TodoListProps> {
 
 	componentDidMount () {
-		setTimeout(this.props.getTodos, 3000);
+		this.props.getTodosAsync();
 	}
 
 	render () {
@@ -69,9 +69,10 @@ const mapStateToProps = (appState: AppStoreState, ownProps: TodoListOwnProps = {
 const mapDispatchToProps = (dispatch: Dispatch<Action>, ownProps: TodoListOwnProps) => {
 	return {
 		getTodos: () => dispatch(getTodos()),
+		getTodosAsync: () => dispatch(getTodosAsync() as any),
 		updateTodo: (todo: ITodo) => dispatch(updateTodo(todo)),
 		filterTodos: (filter: TodoFilterType) => dispatch(filterTodos(filter)),
-		toggleAddingTodo: (isAdding: boolean) => dispatch(addingTodo(isAdding))
+		toggleAddingTodo: (isAdding: boolean) => dispatch(addingTodo(isAdding)),
 	}
 }
 
