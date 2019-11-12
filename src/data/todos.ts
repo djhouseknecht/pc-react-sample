@@ -1,6 +1,6 @@
 import { ITodo } from "../interfaces/todo";
 
-const data: ITodo[] = [
+export const data: ITodo[] = [
 	{ id: 1, todo: 'Write react', complete: false },
 	{ id: 2, todo: 'Learn Redux', complete: false },
 	{ id: 3, todo: 'Author a novel', complete: false },

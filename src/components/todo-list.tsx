@@ -1,105 +1,89 @@
-import React from 'react';
+import React, { Dispatch } from 'react';
 import { Todo } from './todo';
-import { getTodosFromApi } from '../data/todos';
 import { AddTodo } from './add-todo';
-import { ITodo } from '../interfaces/todo';
-import { TodoFilter, TodoFilterType } from './todo-filter';
+import { ITodo, TodoFilterType } from '../interfaces/todo';
+import { TodoFilter } from './todo-filter';
+import { connect } from 'react-redux';
+import { getTodos, updateTodo, filterTodos, addingTodo } from '../store/todo.actions';
+import { AppStoreState } from '../store/store';
+import { Action } from 'redux';
 
-interface TodoListState {
-	addTodo: boolean;
-	loading: boolean;
-	filter: TodoFilterType;
-	todos: ITodo[];
-}
-
-export class TodoList extends React.Component<{}, TodoListState> {
-	constructor (props) {
-		super(props);
-
-		this.state = {
-			addTodo: false,
-			loading: true,
-			filter: 'all',
-			todos: []
-		};
-	}
+class _TodoList extends React.Component<TodoListProps> {
 
 	componentDidMount () {
-		getTodosFromApi().then(data => {
-			this.setState({
-				...this.state,
-				loading: false,
-				todos: data
-			});
-		})
-	}
-
-	todoAdded (newTodo: ITodo) {
-		this.setState({
-			todos: this.state.todos.concat(newTodo)
-		});
-	}
-
-	todoIsCompleted (todoId: number, isComplete: boolean) {
-		const newTodos = this.state.todos.slice();
-		const updatedTodo = this.state.todos.find(todo => todo.id === todoId);
-
-		if (!updatedTodo) {
-			return console.warn('Could not find the ToDo to update');
-		}
-
-		updatedTodo.complete = isComplete;
-		this.setState({
-			...this.state,
-			todos: newTodos
-		});
-	}
-
-	filterTodos (filterType: TodoFilterType) {
-		this.setState({ filter: filterType });
-	}
-
-	getFilteredTodos (): ITodo[] {
-		let filteredTodos: ITodo[];
-		switch (this.state.filter) {
-			case 'completed': {
-				filteredTodos = this.state.todos.filter(t => t.complete);
-				break;
-			}
-			case 'not_completed': {
-				filteredTodos = this.state.todos.filter(t => !t.complete);
-				break;
-			}
-			case 'all':
-			default: {
-				filteredTodos = this.state.todos.slice();
-			}
-		}
-		return filteredTodos;
+		setTimeout(this.props.getTodos, 3000);
 	}
 
 	render () {
-		const todos = this.getFilteredTodos().map((todo, i) => {
-			return <Todo key={i} todo={todo.todo} id={todo.id} complete={todo.complete} updateFn={this.todoIsCompleted.bind(this)} />
+		const todos = this.props.todos.map((todo, i) => {
+			return <Todo key={i} {...todo} />
 		});
 
 		return (
 			<div>
-				<button type="button" onClick={() => this.setState({ ...this.state, addTodo: !this.state.addTodo })}>
-					{this.state.addTodo ? 'Hide' : 'Add new todo'}
+				<button type="button" onClick={() => this.props.toggleAddingTodo(!this.props.addingTodo)}>
+					{this.props.addingTodo ? 'Hide' : 'Add new todo'}
 				</button>
-				<div style={{ display: this.state.addTodo ? 'block' : 'none' }}>
-					<AddTodo todoAdded={this.todoAdded.bind(this)} />
+				<div style={{ display: this.props.addingTodo ? 'block' : 'none' }}>
+					<AddTodo />
 				</div>
 
 				<div>
-					<TodoFilter defaultValue={this.state.filter} filterChanged={this.filterTodos.bind(this)} />
+					<TodoFilter />
 				</div>
 
 				<h4>List of Todos:</h4>
-				<span style={{ display: this.state.loading ? 'block' : 'none' }}>Loading...</span>
+				<span style={{ display: this.props.loading ? 'block' : 'none' }}>Loading...</span>
 				{todos}
 			</div>
 		)
 	}
 }
+
+function filteredTodos (todos: ITodo[], filter: TodoFilterType): ITodo[] {
+	if (!todos || !todos.length) return [];
+	switch (filter) {
+		case 'completed': {
+			return todos.filter(t => t.complete);
+		}
+		case 'not_completed': {
+			return todos.filter(t => !t.complete);
+		}
+		case 'all':
+		default: {
+			return todos.slice();
+		}
+	}
+}
+
+const mapStateToProps = (appState: AppStoreState, ownProps: TodoListOwnProps = {}) => {
+	const state = appState.todo;
+	return {
+		todos: filteredTodos(state.todos, state.filter),
+		loading: state.loading,
+		filter: state.filter,
+		addingTodo: state.addingTodo
+	}
+}
+
+const mapDispatchToProps = (dispatch: Dispatch<Action>, ownProps: TodoListOwnProps) => {
+	return {
+		getTodos: () => dispatch(getTodos()),
+		updateTodo: (todo: ITodo) => dispatch(updateTodo(todo)),
+		filterTodos: (filter: TodoFilterType) => dispatch(filterTodos(filter)),
+		toggleAddingTodo: (isAdding: boolean) => dispatch(addingTodo(isAdding))
+	}
+}
+
+type TodoListOwnProps = {
+
+}
+
+type TodoListProps = ReturnType<typeof mapStateToProps>
+	& ReturnType<typeof mapDispatchToProps>
+	& TodoListOwnProps;
+
+export const TodoList = connect(
+	mapStateToProps,
+	mapDispatchToProps
+)(_TodoList);

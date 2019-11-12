@@ -1,8 +1,11 @@
-import React from 'react';
+import React, { Dispatch } from 'react';
 import { ITodo } from '../interfaces/todo';
+import { AppStoreState } from '../store/store';
+import { Action } from 'redux';
+import { addTodo } from '../store/todo.actions';
+import { connect } from 'react-redux';
 
 const random = () => Math.floor(Math.random() * 10000);
-
 const blankTodo = (): ITodo => {
 	return {
 		id: random(),
@@ -11,26 +14,20 @@ const blankTodo = (): ITodo => {
 	};
 }
 
-interface AddTodoProps {
-	todoAdded: (todo: ITodo) => void
-}
-
-export class AddTodo extends React.Component<AddTodoProps, ITodo> {
+class _AddTodo extends React.Component<AddTodoProps, { newTodo: ITodo }> {
 	constructor (props: AddTodoProps) {
 		super(props);
-		this.state = blankTodo();
+		this.state = { newTodo: blankTodo() };
 	}
 
 	handleTextChange (event) {
-		const { value } = event.target;
-		this.setState({ ...this.state, todo: value });
+		this.setState({ newTodo: { ...this.state.newTodo, todo: event.target.value } });
 	}
 
 	handleButtonClick (event) {
-		this.handleTextChange(event);
-		const todo = this.state;
-		this.props.todoAdded(todo);
-		this.setState(blankTodo());
+		event.preventDefault();
+		this.props.addTodo(this.state.newTodo);
+		this.setState({ newTodo: blankTodo() })
 	}
 
 	render () {
@@ -39,7 +36,7 @@ export class AddTodo extends React.Component<AddTodoProps, ITodo> {
 				<input
 					type="text"
 					name="todo"
-					value={this.state.todo}
+					value={this.state.newTodo.todo}
 					onChange={this.handleTextChange.bind(this)}
 					placeholder='Add a todo'
 				/>
@@ -48,3 +45,26 @@ export class AddTodo extends React.Component<AddTodoProps, ITodo> {
 		)
 	}
 }
+
+const mapStateToProps = (appState: AppStoreState, ownProps: AddTodoOwnProps) => {
+	return {}
+}
+
+const mapDispatchToProps = (dispatch: Dispatch<Action>, ownProps: AddTodoOwnProps) => {
+	return {
+		addTodo: (todo: ITodo) => dispatch(addTodo(todo)),
+	}
+}
+
+type AddTodoOwnProps = {
+
+}
+
+type AddTodoProps = ReturnType<typeof mapStateToProps>
+	& ReturnType<typeof mapDispatchToProps>
+	& AddTodoOwnProps;
+
+export const AddTodo = connect(
+	mapStateToProps,
+	mapDispatchToProps
+)(_AddTodo);

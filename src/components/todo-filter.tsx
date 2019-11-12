@@ -1,21 +1,17 @@
-import React from 'react';
+import React, { Dispatch } from 'react';
+import { TodoFilterType } from '../interfaces/todo';
+import { filterTodos } from '../store/todo.actions';
+import { AppStoreState } from '../store/store';
+import { Action } from 'redux';
+import { connect } from 'react-redux';
 
-export type TodoFilterType = 'completed' | 'not_completed' | 'all';
-
-interface TodoFilterProps {
-	filterChanged: (filterType: TodoFilterType) => void;
-	defaultValue?: TodoFilterType;
-}
-
-export class TodoFilter extends React.Component<TodoFilterProps> {
-
-	onChange (event) {
-		this.props.filterChanged(event.target.value);
-	}
-
+class _TodoFilter extends React.Component<TodoFilterProps> {
 	render () {
 		return (
-			<select id="filter" onChange={this.onChange.bind(this)} defaultValue={this.props.defaultValue}>
+			<select id="filter"
+				onChange={(e) => this.props.updateFilter(e.target.value as TodoFilterType)}
+				defaultValue={this.props.defaultValue}
+			>
 				<option value="all">All</option>
 				<option value="completed">Completed</option>
 				<option value="not_completed">Not Completed</option>
@@ -23,3 +19,27 @@ export class TodoFilter extends React.Component<TodoFilterProps> {
 		);
 	}
 }
+
+const mapStateToProps = (appState: AppStoreState, ownProps: TodoFilterOwnProps) => {
+	const state = appState.todo;
+	return {
+		defaultValue: state.filter
+	}
+}
+
+const mapDispatchToProps = (dispatch: Dispatch<Action>, ownProps: TodoFilterOwnProps) => {
+	return {
+		updateFilter: (filter: TodoFilterType) => dispatch(filterTodos(filter)),
+	}
+}
+
+type TodoFilterOwnProps = {};
+
+type TodoFilterProps = ReturnType<typeof mapStateToProps>
+	& ReturnType<typeof mapDispatchToProps>
+	& TodoFilterOwnProps;
+
+export const TodoFilter = connect(
+	mapStateToProps,
+	mapDispatchToProps
+)(_TodoFilter);
